@@ -86,8 +86,6 @@ class MultimediaDetection(Page):
                     if os.path.exists(video_file_path):
                         with open(video_file_path, 'rb') as video_file:
                             video_bytes = video_file.read()
-                        if video_bytes:
-                            st.video(video_bytes)
                     else:
                         st.error("Selected video file does not exist.")
                     if video_bytes:
@@ -149,8 +147,8 @@ class MultimediaDetection(Page):
 
                 selective_area = st.selectbox(
                     'Selective Area', 
-                    ['Default', 'Draw Area', 'ALL'], 
-                    index=1,
+                    ['Draw Area', 'ALL'], 
+                    index=0,
                     key='selectived_draw_area',
                     )
                 
@@ -237,10 +235,6 @@ class MultimediaDetection(Page):
                             elif selective_area == 'ALL':
                                 points = [[(0, 0), (img_pil.width, 0), (img_pil.width,
                                                                         img_pil.height), (0, img_pil.height)]]
-                            else:
-                                selective_route = st.selectbox(
-                                    'Select Route', settings.ROI_DICT.keys(), key='selective_route')
-                                points = settings.ROI_DICT[selective_route]
                             
                             if st.button('Complete Drawing', key='complete_drawing'):
                                 st.session_state['button_pressed'] = True

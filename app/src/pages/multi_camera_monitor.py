@@ -176,7 +176,7 @@ class MultiCameraMonitor(Page):
                         if camera:
                             camera.name = st.session_state["update_camera"]['camera_name']
                             camera.stream_url = st.session_state["update_camera"]['camera_url']
-                            camera.count_roi = [st.session_state["update_camera"]['camera_roi']]
+                            camera.count_roi = st.session_state["update_camera"]['camera_roi']
                             db.commit()
                     
                     if "update_button" in st.session_state:
@@ -197,14 +197,15 @@ class MultiCameraMonitor(Page):
                         Camera.id == camera_id).first()
                     if camera:
                         self.urls.append(camera.stream_url)
-                        roi = settings.ROI_DICT.get(camera.name, [])
+                        roi = camera.count_roi
                         rois.append(roi)
-
+ 
             for i, traffic_monitor in enumerate(self.traffic_monitors):
-                traffic_monitor.create_counting_regions(rois[i])
+                points_as_tuples = [[tuple(point) for point in sublist] for sublist in rois[i]]
+                traffic_monitor.create_counting_regions(points_as_tuples)
                 traffic_monitor.calculate_area_roi(traffic_monitor.counting_regions)
 
-            st.session_state['detector_running'] = False
+            st.session_state['detector_running'] = False 
 
             if st.button("Start Monitor"):
                 st.session_state['detector_running'] = True
@@ -282,7 +283,7 @@ class MultiCameraMonitor(Page):
                     "weight": 2,
                 },
             ))
-            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count}"))
+            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count} - Last Update : {traffic.timestamp}"))
             density_map.add_child(fg)
 
         control = folium.LayerControl(collapsed=False)
@@ -296,7 +297,7 @@ class MultiCameraMonitor(Page):
                 color = get_polygon_color(density_level_str)
                 folium.Marker(
                     location=[camera.latitude, camera.longitude],
-                    popup=f"<i>{camera.name} - Traffic Density: {traffic.density_level}</i>",
+                    popup=f"<i>{camera.name} - Traffic Density: {traffic.density_level} - Last Update : {traffic.timestamp} </i>",
                     tooltip=camera.name,
                     icon=folium.Icon(color=color)
                 ).add_to(density_map)
