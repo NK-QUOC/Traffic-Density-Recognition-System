@@ -26,8 +26,8 @@ MODEL_DIR = ROOT / 'weights'
 YOLOv8_MODEL = MODEL_DIR / 'yolov8-pretrained.pt'
 YOLOv9_MODEL = MODEL_DIR / 'yolov9-pretrained.pt'
 # YOLOv9_accident_MODEL = MODEL_DIR / 'yolov9-accident-50epoch.pt'
-YOLOV9_tensort_MODEL = MODEL_DIR / 'yolov9-tdrs-for-convert-int8-win.engine'
-YOLOV8_tensort_MODEL = MODEL_DIR / 'yolov8-tdrs-for-convert-win.engine'
+# YOLOV9_tensort_MODEL = MODEL_DIR / 'yolov9-tdrs-for-convert-int8-win.engine'
+# YOLOV8_tensort_MODEL = MODEL_DIR / 'yolov8-tdrs-for-convert-win.engine'
 
 # Tracker config
 TRACKER_DIR = ROOT / 'cfg' / 'trackers'
@@ -39,8 +39,9 @@ WEBCAM_PATH = 0
 
 DATA_CSV_PATH = ROOT / 'data'
 
-POSTGRES_SERVER='localhost'
-POSTGRES_PORT=5432
-POSTGRES_USER='postgres'
-POSTGRES_PASSWORD='quoc3010'
-POSTGRES_DB='TDRS'
+# Database
+POSTGRES_SERVER=''
+POSTGRES_PORT=''
+POSTGRES_USER=''
+POSTGRES_PASSWORD=''
+POSTGRES_DB=''

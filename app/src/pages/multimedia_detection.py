@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import re
 import tempfile
@@ -81,8 +82,14 @@ class MultimediaDetection(Page):
                     video_path = st.selectbox(
                         "Choose a video...", settings.VIDEOS_DICT.keys(),
                         on_change=handle_source_change)
-                    with open(settings.VIDEOS_DICT.get(video_path), 'rb') as video_file:
-                        video_bytes = video_file.read()
+                    video_file_path = settings.VIDEOS_DICT.get(video_path)
+                    if os.path.exists(video_file_path):
+                        with open(video_file_path, 'rb') as video_file:
+                            video_bytes = video_file.read()
+                        if video_bytes:
+                            st.video(video_bytes)
+                    else:
+                        st.error("Selected video file does not exist.")
                     if video_bytes:
                         st.video(video_bytes)
                     video_path = str(settings.VIDEOS_DICT.get(video_path))
