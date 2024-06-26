@@ -88,6 +88,7 @@ namex==0.0.8
 networkx==3.2.1
 numpy==1.26.4
 opencv-python==4.9.0.80
+#opencv-python-headless
 optree==0.11.0
 packaging==23.2
 pillow==10.3.0
