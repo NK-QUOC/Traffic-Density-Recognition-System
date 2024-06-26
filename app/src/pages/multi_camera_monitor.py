@@ -155,7 +155,7 @@ class MultiCameraMonitor(Page):
                 camera_name = st.selectbox(
                     "Select a location:",
                     options=available_cameras,
-                    index=2,
+                    index=0,
                     key=f'camera_{i}'
                 )
                 
