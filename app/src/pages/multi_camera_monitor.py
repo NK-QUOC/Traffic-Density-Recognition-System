@@ -32,8 +32,6 @@ from sqlalchemy import and_, func
 import geopandas as gpd
 import shapely
 
-import streamlit_modal as Modal
-
 class MultiCameraMonitor(Page):
     def __init__(self, state):
         self.state = state
