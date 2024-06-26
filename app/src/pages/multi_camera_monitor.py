@@ -1,4 +1,5 @@
 import ast
+from datetime import timedelta
 import gc
 from pathlib import Path
 from queue import Queue
@@ -104,7 +105,6 @@ class MultiCameraMonitor(Page):
                             print("Region: ", region['points'])   
                         st.info("No changes detected")
                         
-        
     def params_config(self):
         with st.expander("Monitor Configuration", expanded=True):
             model_type = st.selectbox(
@@ -225,7 +225,7 @@ class MultiCameraMonitor(Page):
             func.max(TrafficDensity.timestamp).label('max_timestamp')
         ).group_by(TrafficDensity.camera_id).subquery()
 
-        # Truy vấn để lấy tất cả bản ghi TrafficDensity có timestamp là ngày mới nhất cho mỗi camera_id
+        # Query to get the latest traffic density data for each camera
         latest_traffic = db.query(TrafficDensity).join(
             max_timestamp_subquery,
             and_(
@@ -236,21 +236,40 @@ class MultiCameraMonitor(Page):
 
         return latest_traffic
 
+    def get_average_traffic_density_last_minute(self, db):
+        # query to get the max timestamp in the database
+        max_timestamp = db.query(func.max(TrafficDensity.timestamp)).scalar()
+        one_minute_ago = max_timestamp - timedelta(minutes=1)
+        
+        # query to get the average traffic density for each camera in the last minute
+        latest_traffic = db.query(
+            TrafficDensity.camera_id,
+            func.avg(TrafficDensity.density_level).label('avg_density_level'),
+            func.sum(TrafficDensity.vehicle_count).label('total_vehicle_count'),
+            func.max(TrafficDensity.timestamp).label('max_timestamp')
+        ).filter(
+            TrafficDensity.timestamp >= one_minute_ago,
+            TrafficDensity.timestamp <= max_timestamp
+        ).group_by(TrafficDensity.camera_id).all()
+        
+        return latest_traffic
+    
     def get_traffic_data(self):
         with get_db() as db:
-            latest_traffic_data = self.get_latest_traffic_density(db)
+            latest_traffic_data = self.get_average_traffic_density_last_minute(db)
             camera_data = db.query(Camera).all()
         return latest_traffic_data, camera_data
 
     def create_map(self, latest_traffic_data, camera_data):
         camera_dict = {camera.id: camera for camera in camera_data}
         traffic_density_dict = {traffic.camera_id: traffic for traffic in latest_traffic_data}
-
+                
         density_map = folium.Map(location=[16.07415081156636, 108.2167160511017], zoom_start=20)
 
         def get_polygon_color(density_level):
             return 'green' if density_level == 'low' else 'orange' if density_level == 'medium' else 'red'
-
+        
+        
         gpdfs = []
         for camera in camera_data:
             folium.Marker(
@@ -260,10 +279,11 @@ class MultiCameraMonitor(Page):
             ).add_to(density_map)
 
             traffic = traffic_density_dict.get(camera.id)
-            density_level = traffic.density_level
+            density_level = traffic.avg_density_level if traffic else 0
             density_level_str = "low" if density_level < 1/3 else "medium" if density_level < 2/3 else "high"
-            count = traffic.vehicle_count if traffic else 0
+            count = traffic.total_vehicle_count if traffic else 0
             color = get_polygon_color(density_level_str)
+
             if camera.area:
                 wkt = "POLYGON ((" + \
                     ", ".join(f"{lon} {lat}" for lon, lat in camera.area) + "))"
@@ -276,14 +296,14 @@ class MultiCameraMonitor(Page):
             fg = folium.FeatureGroup(name=name)
             fg.add_child(folium.GeoJson(
                 gpdf,
-                style_function=lambda x: {
-                    "fillColor": color,
-                    "color": color,
+                style_function=lambda x, col=color: {
+                    "fillColor": col,
+                    "color": col,
                     "fillOpacity": 0.13,
                     "weight": 2,
                 },
             ))
-            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count} - Last Update : {traffic.timestamp}"))
+            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count} - Last Update : {traffic.max_timestamp}"))
             density_map.add_child(fg)
 
         control = folium.LayerControl(collapsed=False)
@@ -292,12 +312,12 @@ class MultiCameraMonitor(Page):
         for traffic in latest_traffic_data:
             camera = camera_dict.get(traffic.camera_id)
             if camera:
-                density_level = traffic.density_level
+                density_level = traffic.avg_density_level
                 density_level_str = "low" if density_level < 1/3 else "medium" if density_level < 2/3 else "high"
                 color = get_polygon_color(density_level_str)
                 folium.Marker(
                     location=[camera.latitude, camera.longitude],
-                    popup=f"<i>{camera.name} - Traffic Density: {traffic.density_level} - Last Update : {traffic.timestamp} </i>",
+                    popup=f"<i>{camera.name} - Average Traffic Density: {traffic.avg_density_level} - Last Update : {traffic.max_timestamp} </i>",
                     tooltip=camera.name,
                     icon=folium.Icon(color=color)
                 ).add_to(density_map)
@@ -380,6 +400,7 @@ class MultiCameraMonitor(Page):
                         placeholders[i].image(frame, channels="BGR", use_column_width=True)
                         
                     if time.time() - start_time > 60 and not self.map_queue.empty():
+                        print("Updated map")
                         try:
                             density_map = self.map_queue.get()
                             with map_placeholder:
