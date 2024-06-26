@@ -49,7 +49,7 @@ class MultiCameraMonitor(Page):
     @st.experimental_dialog(title="Update Camera", width="large")
     def update_camera(self, camera_id):
         input_holder = st.empty()
-        
+        progress = st.empty()
         with get_db() as db:
             camera = db.query(Camera).filter(Camera.id == camera_id).first()
         
@@ -68,10 +68,13 @@ class MultiCameraMonitor(Page):
                 
                 update_button = st.form_submit_button("Update")
                 
+                progress.progress(0)
                 vid_cap = CamGear(source=camera_url, logging=True, stream_mode=True, **{"STREAM_RESOLUTION": "720p"}).start()
                 frame = vid_cap.read()
                 vid_cap.stop()
+                progress.progress(50)
                 image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                progress.progress(100)
                 points = self.traffic_monitor.draw_tool(image)
                 if points == [(0, 0), (image.width, 0), (image.width,image.height), (0, image.height)]:
                     points = []
@@ -126,7 +129,7 @@ class MultiCameraMonitor(Page):
                 mode_path = Path(settings.YOLOv8_MODEL)
 
             num_routes = st.slider(
-                "Number of Routes to Monitor", 1, 3, 2, key='num_routes')
+                "Number of Routes to Monitor", 1, 3, 1, key='num_routes')
 
             for num in range(num_routes):
                 traffic_monitor = TrafficMonitor()
@@ -136,7 +139,6 @@ class MultiCameraMonitor(Page):
                 traffic_monitor.tracker_type = tracker_type
                 self.traffic_monitors.append(traffic_monitor)
 
-            # Lấy danh sách các camera từ cơ sở dữ liệu
             with get_db() as db:
                 cameras = db.query(Camera).all()
                 camera_options = {camera.name: camera.id for camera in cameras}
@@ -153,7 +155,7 @@ class MultiCameraMonitor(Page):
                 camera_name = st.selectbox(
                     "Select a location:",
                     options=available_cameras,
-                    index=0,
+                    index=2,
                     key=f'camera_{i}'
                 )
                 
