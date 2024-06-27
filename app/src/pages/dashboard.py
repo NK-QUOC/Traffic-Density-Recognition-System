@@ -94,23 +94,38 @@ class Dashboard(Page):
         df_filtered_grouped_minute_density = df_density_filtered.resample('Min')[numeric_cols_density].mean().reset_index()
         df_filtered_grouped_hour_density = df_density_filtered.resample('h')[numeric_cols_density].mean().reset_index()
 
+        min_count = df_vehicles_filtered_grouped_hour['count'].min()
+        max_count = df_vehicles_filtered_grouped_hour['count'].max()
+        avg_count = df_vehicles_filtered_grouped_hour['count'].mean()
         
-        df_vehicles_hourly = df_vehicles_filtered.resample('h')[numeric_cols_vehicles].agg(
-            {'count': ['min', 'max', 'mean']}).reset_index()
-        df_vehicles_hourly.columns = ['timestamp',
-                             'min_count', 'max_count', 'avg_count']
+        # Tìm ngày và giờ có số lượng xe cao nhất
+        max_count_row = df_vehicles_filtered_grouped_hour[df_vehicles_filtered_grouped_hour['count'] == df_vehicles_filtered_grouped_hour['count'].max()]
+        min_count_row = df_vehicles_filtered_grouped_hour[df_vehicles_filtered_grouped_hour['count'] == df_vehicles_filtered_grouped_hour['count'].min()]
+        # In kết quả
+        print(f"Max vehicle count in an hour: {max_count}, Date: {max_count_row['timestamp'].iloc[0]}")
         
-        # Find min, max and average vehicle count
-        min_index = df_vehicles_hourly['min_count'].idxmin()
-        max_index = df_vehicles_hourly['max_count'].idxmax()
-        min_row = df_vehicles_hourly.loc[min_index]
-        max_row = df_vehicles_hourly.loc[max_index]
+        print(f"Min vehicle count in an hour: {min_count}")
+        print(f"Max vehicle count in an hour: {max_count}")
+        print(f"Average vehicle count in an hour: {avg_count:.2f}")
+        
+        # df_vehicles_hourly = df_vehicles_filtered.resample('h')[numeric_cols_vehicles].agg(
+        #     {'count': ['min', 'max', 'mean']}).reset_index()
+        # df_vehicles_hourly.columns = ['timestamp',
+        #                      'min_count', 'max_count', 'avg_count']
+        
+        # # Find min, max and average vehicle count
+        # min_index = df_vehicles_hourly['min_count'].idxmin()
+        # max_index = df_vehicles_hourly['max_count'].idxmax()
+        # min_row = df_vehicles_hourly.loc[min_index]
+        # max_row = df_vehicles_hourly.loc[max_index]
 
         # Display summary statistics
         st.subheader("Summary Statistics")
-        st.write(f"Minimum Vehicle Count: **{int(min_row['min_count'])}** at **{min_row['timestamp'].strftime('%H:%M:%S %Y-%m-%d')}**")
-        st.write(f"Maximum Vehicle Count: **{int(max_row['max_count'])}** at **{max_row['timestamp'].strftime('%H:%M:%S %Y-%m-%d')}**")
-        st.write(f"Average Vehicle Count: **{df_vehicles_filtered['count'].mean():.2f}**")
+        st.write(f"Minimum Vehicle Count: **{min_count}** at **{min_count_row['timestamp'].iloc[0].strftime('%H:%M:%S %Y-%m-%d')}**")
+        st.write(f"Maximum Vehicle Count: **{max_count}** at **{max_count_row['timestamp'].iloc[0].strftime('%H:%M:%S %Y-%m-%d')}**")
+        st.write(f"Average Vehicle Count: **{avg_count:.2f}**")
+        
+        
         
         # Line chart for vehicle count per minute and hour
         fig_minute = px.line(df_vehicles_filtered_grouped_minute, x='timestamp', y='count',
@@ -248,26 +263,26 @@ class Dashboard(Page):
         }
         
         # Bar chart with min, max, and average values
-        fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['min_count'],
-                               name='Min Count', marker_color=colors['min_count'], showlegend=False), row=1, col=1)
-        fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['max_count'],
-                               name='Max Count', marker_color=colors['max_count'], showlegend=False), row=1, col=1)
-        fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['avg_count'],
-                               name='Average Count', marker_color=colors['avg_count'], showlegend=False), row=1, col=1)
+        # fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['min_count'],
+        #                        name='Min Count', marker_color=colors['min_count'], showlegend=False), row=1, col=1)
+        # fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['max_count'],
+        #                        name='Max Count', marker_color=colors['max_count'], showlegend=False), row=1, col=1)
+        # fig_combined.add_trace(go.Bar(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['avg_count'],
+        #                        name='Average Count', marker_color=colors['avg_count'], showlegend=False), row=1, col=1)
 
-        # Line chart with min, max, and average values
-        fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['avg_count'], mode='lines+markers', line=dict(
-            color=colors['avg_count']), name='Average Count'), row=1, col=2)
-        fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['min_count'],
-                               mode='lines+markers', line=dict(color=colors['min_count']), name='Min Count'), row=1, col=2)
-        fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['max_count'],
-                               mode='lines+markers', line=dict(color=colors['max_count']), name='Max Count'), row=1, col=2)
+        # # Line chart with min, max, and average values
+        # fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['avg_count'], mode='lines+markers', line=dict(
+        #     color=colors['avg_count']), name='Average Count'), row=1, col=2)
+        # fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['min_count'],
+        #                        mode='lines+markers', line=dict(color=colors['min_count']), name='Min Count'), row=1, col=2)
+        # fig_combined.add_trace(go.Scatter(x=df_vehicles_hourly['timestamp'], y=df_vehicles_hourly['max_count'],
+        #                        mode='lines+markers', line=dict(color=colors['max_count']), name='Max Count'), row=1, col=2)
 
-        fig_combined.update_layout(title='Min, Max, and Average Vehicle Count per Hour',
-                                   xaxis_title='Thời gian', yaxis_title='Số lượng',
-                                   showlegend=True, legend=dict(x=1.0, y=1.1))
+        # fig_combined.update_layout(title='Min, Max, and Average Vehicle Count per Hour',
+        #                            xaxis_title='Thời gian', yaxis_title='Số lượng',
+        #                            showlegend=True, legend=dict(x=1.0, y=1.1))
 
-        st.plotly_chart(fig_combined)
+        # st.plotly_chart(fig_combined)
 
 
 if __name__ == "__main__":

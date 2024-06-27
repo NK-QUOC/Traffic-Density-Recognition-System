@@ -118,7 +118,7 @@ class MultiCameraMonitor(Page):
             iou = st.slider("IoU Threshold", 0.0, 1.0, 0.5, 0.01, key='iou')
 
             tracker_radio = st.radio(
-                "Tracker", ('bytetrack', 'botsort'))
+                "Tracker", ('bytetrack',))
             tracker_type = settings.bytetrack if tracker_radio == 'bytetrack' else settings.botsort
 
             if model_type == 'yolov9':

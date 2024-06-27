@@ -4,7 +4,7 @@ from ultralytics import YOLO
 model = YOLO("yolov8-tdrs-for-convert.pt")  # load a custom trained model
 
 # Export the model
-model.export(format="engine", 
+model.export(format="onnx", 
              int8 = True, 
              simplify = True, 
              dynamic = True, 

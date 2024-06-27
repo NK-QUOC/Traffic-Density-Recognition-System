@@ -93,7 +93,7 @@ class TrafficMonitor():
         # self.is_display_tracker = True if display_tracker == 'Yes' else False
         # if self.is_display_tracker:
         tracker_radio = st.radio(
-            "Tracker", ('bytetrack', 'botsort'))
+            "Tracker", ('bytetrack',))
         self.tracker_type = settings.bytetrack if tracker_radio == 'bytetrack' else settings.botsort
 
     def is_youtube_url(self, url):
@@ -565,14 +565,14 @@ class TrafficMonitor():
                     results, frame, self.model.names)
 
                 # -------- Plot Graph -------- #
-                if time.time() - start_time > 5:  # Update data every 5 second
+                if time.time() - start_time > 10:  # Update data every 10 second
                     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     print("Time", time.time() - start_time)
                     start_time = time.time()
                     self.is_display_chart = True
+                    print("Updating data...")
                     for region in self.counting_regions:
                         for cls, count in region['counts'].items():
-                            # Thêm dữ liệu mới vào DataFrame
                             new_row = {'Time': timestamp, 'Vehicle Count': count,
                                        'Vehicle Type': cls}
                             self.data_graph_df = pd.concat(
@@ -623,12 +623,7 @@ class TrafficMonitor():
                                                  """)
                     offset_x_density = int(frame_width/2) + 30
                     cv2.putText(new_frame, f"Density Level: {density_level_value}", (offset_x_density, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-                    
-                # cv2.putText(new_frame, "FPS: {:.2f}".format(fps), (10, 30),
-                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                
-                # density_level_x_position = 10 + 200  # 10 là vị trí x của FPS, 200 là khoảng cách mong muốn              
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)         
                 
                 frame_window.image(new_frame,
                                    caption='Detected Video',
@@ -709,11 +704,11 @@ class TrafficMonitor():
 
             # -------- Plot Graph -------- #
 
-            if time.time() - self.chart_start_time > 5:  # Update data every 5 second
+            if time.time() - self.chart_start_time > 10:  # Update data every 10 second
                 timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 self.chart_start_time = time.time()
                 self.is_display_chart = True
-
+                print("Updating data...")
                 for region in self.counting_regions:
                     for cls, count in region['counts'].items():
                         # Thêm dữ liệu mới vào DataFrame
@@ -727,24 +722,6 @@ class TrafficMonitor():
                             self.save_detection_data(db, timestamp, cls, count, route_id)
                             self.update_region_density(db, timestamp, count_total, route_id)
 
-                # self.plot_graph(placeholder=chart_window)
-            
-            # density_level = self.calculate_density()
-            
-            # # Display the FPS
-            # curr_time = time.time()
-            # fps = 1 / (curr_time - prev_time)
-            # print("FPS: ", fps)
-            
-            # cv2.putText(new_frame, "FPS: {:.2f}".format(fps), (10, 30),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
-            # density_level_x_position = 10 + 50  # 10 là vị trí x của FPS, 200 là khoảng cách mong muốn
-
-            # # Hiển thị Density Level ngay sau FPS
-            # cv2.putText(new_frame, f"Density Level: {density_level}", (density_level_x_position, 30),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
             col1, col2, col3 = fps_window.columns(3, gap="medium")
 
             density_level = self.calculate_density()
@@ -792,17 +769,7 @@ class TrafficMonitor():
                 offset_x_density = int(frame.shape[1]/2) + 30
                 cv2.putText(new_frame, f"Density Level: {density_level_value}", (offset_x_density, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        
-            # frame_window.image(new_frame,
-            #                    caption='Detected Video',
-            #                    channels="BGR",
-            #                    use_column_width=True)
-
-            # del results
-            # del new_frame
-            # del frame
-            # gc.collect()
-            
+                    
             return new_frame
             
         else:
