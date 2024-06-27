@@ -1,6 +1,7 @@
 import gc
 import os
 import re
+import uuid
 import cv2
 import numpy as np
 import pandas as pd
@@ -490,7 +491,17 @@ class TrafficMonitor():
                 fig = px.pie(self.data_graph_df, names='Vehicle Type',
                                 values='Vehicle Count', title='Vehicle Type Distribution')
                 st.plotly_chart(fig)
-    
+
+    def create_unique_filename(self, base_name="output", extension=".mp4"):
+        while True:
+            # Tạo ID ngẫu nhiên
+            unique_id = uuid.uuid4()
+            # Tạo tên file mới với ID này
+            filename = f"{base_name}_{unique_id}{extension}"
+            # Kiểm tra xem file đã tồn tại chưa
+            if not os.path.exists(filename):
+                return filename
+  
     def process_video(self, vid_cap, is_stream=False):
                 
         frame_window = st.image([])
@@ -516,6 +527,19 @@ class TrafficMonitor():
         if self.counting_regions:
             self.calculate_area_roi(self.counting_regions)
         
+        if is_stream:
+            frame = vid_cap.read()
+            frame_height, frame_width = frame.shape[:2]
+        else:
+            frame_width = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            frame_height = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # Define the codec and create VideoWriter object
+        output_filename = self.create_unique_filename(settings.OUTPUT_VIDEO_DIR / 'multimedia/output', '.mp4')
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(
+            output_filename, fourcc, 30.0, (frame_width, frame_height))
+        
         while st.session_state.start_process:
 
             prev_time = time.time()
@@ -527,7 +551,7 @@ class TrafficMonitor():
                 if not success:
                     vid_cap.release()
                     break
-                
+            
             # frame = cv2.resize(frame, (720, int(720*(9/16))))
 
             if self.counting_regions:
@@ -597,20 +621,22 @@ class TrafficMonitor():
                                                 - **[Total Count]**: {total_count}
                                                 \n
                                                  """)
+                    offset_x_density = int(frame_width/2) + 30
+                    cv2.putText(new_frame, f"Density Level: {density_level_value}", (offset_x_density, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
                     
                 # cv2.putText(new_frame, "FPS: {:.2f}".format(fps), (10, 30),
                 #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 
-                # density_level_x_position = 10 + 200  # 10 là vị trí x của FPS, 200 là khoảng cách mong muốn
-
-                # # Hiển thị Density Level ngay sau FPS
-                # cv2.putText(new_frame, f"Density Level: {density_level}", (density_level_x_position, 30),
-                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                # density_level_x_position = 10 + 200  # 10 là vị trí x của FPS, 200 là khoảng cách mong muốn              
                 
                 frame_window.image(new_frame,
                                    caption='Detected Video',
                                    channels="BGR",
                                    use_column_width=True)
+                
+                out.write(new_frame)
+
                 del results
                 del new_frame
                 del frame
@@ -763,7 +789,10 @@ class TrafficMonitor():
                                     - **[Total Count]**: {total_count}
                                     \n
                                     """)
-            
+                offset_x_density = int(frame.shape[1]/2) + 30
+                cv2.putText(new_frame, f"Density Level: {density_level_value}", (offset_x_density, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        
             # frame_window.image(new_frame,
             #                    caption='Detected Video',
             #                    channels="BGR",

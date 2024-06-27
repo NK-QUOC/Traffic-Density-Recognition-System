@@ -303,7 +303,7 @@ class MultiCameraMonitor(Page):
                     "weight": 2,
                 },
             ))
-            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count} - Last Update : {traffic.max_timestamp}"))
+            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count}"))
             density_map.add_child(fg)
 
         control = folium.LayerControl(collapsed=False)
@@ -339,12 +339,22 @@ class MultiCameraMonitor(Page):
             
     def VideoFeed(self, url, i, route_id, fps_window, count_window, chart_window):
         vid_cap = CamGear(source=url, logging=True, stream_mode=True, **{"STREAM_RESOLUTION": "720p"}).start()
+        frame = vid_cap.read()
+        frame_height, frame_width = frame.shape[:2]
         frame_rate = vid_cap.framerate
+
+        # Define the codec and create VideoWriter object
+        output_filename = self.traffic_monitors[i].create_unique_filename(settings.OUTPUT_VIDEO_DIR / 'multicamera/output', '.mp4')
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(
+            output_filename, fourcc, 30.0, (frame_width, frame_height))
+        
         while st.session_state['detector_running']:
             frame = vid_cap.read()
             if frame is None:
                 break
             processed_frame = self.traffic_monitors[i].process_frame(frame, route_id, fps_window, count_window, chart_window)
+            out.write(processed_frame)
             self.queues[i].put(item = processed_frame)
             time.sleep(1/frame_rate) 
             

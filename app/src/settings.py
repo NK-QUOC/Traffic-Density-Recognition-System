@@ -21,6 +21,9 @@ VIDEOS_DICT = {
     'video_4': VIDEO_DIR / 'Camera_View_Công_Trình_bệnh_viện_Đà_Nẵng_18_05_2024_Trưa.mp4'
 }
 
+# output video
+OUTPUT_VIDEO_DIR = ROOT / 'outputs'
+
 # ML Model config
 MODEL_DIR = ROOT / 'weights'
 YOLOv8_MODEL = MODEL_DIR / 'yolov8-pretrained.pt'
