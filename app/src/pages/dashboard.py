@@ -117,6 +117,9 @@ class Dashboard(Page):
                              color='vehicle_type', title='Vehicle Count per Minute', markers=True)
         fig_minute.update_xaxes(
             rangeslider_visible=True,
+            rangeslider=dict(
+                autorange=True
+            ),
             rangeselector=dict(
                 buttons=list([
                     dict(count=1, label="1d", step="day", stepmode="backward"),

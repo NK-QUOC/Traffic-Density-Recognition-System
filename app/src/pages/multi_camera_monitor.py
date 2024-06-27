@@ -303,7 +303,7 @@ class MultiCameraMonitor(Page):
                     "weight": 2,
                 },
             ))
-            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count} - Last Update : {traffic.max_timestamp}"))
+            fg.add_child(folium.Popup(f"{name} - Vehicle Count: {count}"))
             density_map.add_child(fg)
 
         control = folium.LayerControl(collapsed=False)
