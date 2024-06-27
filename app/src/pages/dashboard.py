@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 
 
@@ -46,7 +46,7 @@ class Dashboard(Page):
         # Add date and camera selection widgets
         date_cols = st.columns(2)
         start_date = date_cols[0].date_input(
-            "Start date", df_vehicles['timestamp'].min().date())
+            "Start date", df_vehicles['timestamp'].max().date()-timedelta(days=1))
         end_date = date_cols[1].date_input(
             "End date", df_vehicles['timestamp'].max().date())
         camera_options = {camera.name: camera.id for camera in cameras}
@@ -101,12 +101,6 @@ class Dashboard(Page):
         # Tìm ngày và giờ có số lượng xe cao nhất
         max_count_row = df_vehicles_filtered_grouped_hour[df_vehicles_filtered_grouped_hour['count'] == df_vehicles_filtered_grouped_hour['count'].max()]
         min_count_row = df_vehicles_filtered_grouped_hour[df_vehicles_filtered_grouped_hour['count'] == df_vehicles_filtered_grouped_hour['count'].min()]
-        # In kết quả
-        print(f"Max vehicle count in an hour: {max_count}, Date: {max_count_row['timestamp'].iloc[0]}")
-        
-        print(f"Min vehicle count in an hour: {min_count}")
-        print(f"Max vehicle count in an hour: {max_count}")
-        print(f"Average vehicle count in an hour: {avg_count:.2f}")
         
         # df_vehicles_hourly = df_vehicles_filtered.resample('h')[numeric_cols_vehicles].agg(
         #     {'count': ['min', 'max', 'mean']}).reset_index()
@@ -125,11 +119,9 @@ class Dashboard(Page):
         st.write(f"Maximum Vehicle Count: **{max_count}** at **{max_count_row['timestamp'].iloc[0].strftime('%H:%M:%S %Y-%m-%d')}**")
         st.write(f"Average Vehicle Count: **{avg_count:.2f}**")
         
-        
-        
         # Line chart for vehicle count per minute and hour
         fig_minute = px.line(df_vehicles_filtered_grouped_minute, x='timestamp', y='count',
-                             color='vehicle_type', title='Vehicle Count per Minute', markers=True)
+                             color='vehicle_type', title='Vehicle Count per Minute')
         fig_minute.update_xaxes(
             rangeslider_visible=True,
             rangeselector=dict(
@@ -162,7 +154,7 @@ class Dashboard(Page):
 
         # Line chart for traffic density per minute and hour
         fig_minute_density = px.line(df_filtered_grouped_minute_density, x='timestamp', y='density_level',
-                                     title='Average Traffic Density per Minute', markers=True)
+                                     title='Average Traffic Density per Minute')
         fig_minute_density.update_xaxes(
             rangeslider_visible=True,
             rangeselector=dict(
